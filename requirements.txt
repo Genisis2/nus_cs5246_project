@@ -1,0 +1,8 @@
+nltk==3.8.1
+spacy==3.5.1
+torch==1.13.1 # Non-CUDA accelerated pytorch
+# torch==1.13.1+cu117 # For CUDA-accelerated torch
+# --extra-index-url="https://download.pytorch.org/whl/cu117/" # For CUDA-accelerated torch
+transformers==4.27.2 # Huggingface transformers
+datasets==2.10.1 # Huggingface datasets
+-e ./facebookresearch/access # ACCESS model for text simplification

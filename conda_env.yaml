@@ -1,0 +1,6 @@
+name: "nus_cs5246_project"
+dependencies:
+    - python=3.8.16 # 3.8 to avoid having to build packages for 3.10
+    - pip=23.0.1
+    - ipykernel=6.19.2
+    - cython=0.29.33

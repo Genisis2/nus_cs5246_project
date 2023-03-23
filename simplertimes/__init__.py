@@ -1,7 +1,4 @@
-import data
-import simplify
-import summarize
-import vocab
+from . import data, simplify, summarize, vocab
 
 def simplify_news():
     """Simplifies the news.

@@ -1,5 +1,1 @@
-
-
-def generate_summary():
-    """Pass flag to determine if bart or pegasus will be used. Default to pegasus"""
-    pass
+from .summarizer import BART_MODEL_ID, PEGASUS_MODEL_ID, Summarizer, create_summarizer

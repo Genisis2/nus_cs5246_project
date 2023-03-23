@@ -1,4 +1,4 @@
-from datasets import load_dataset, load_dataset_builder
+from datasets import load_dataset, load_dataset_builder, Dataset, IterableDataset
 
 CNN_DM_DS_ID = 'cnn_dailymail'
 # 1.0.0 is for machine reading and question-answering. 
@@ -10,7 +10,7 @@ def describe_cnn_dm_dataset():
     info = load_dataset_builder(CNN_DM_DS_ID, CNN_DM_DS_VER).info
     print( f"""{info.description}\n\nFeatures: {info.features}\n\nSplit: {[ f'{k}: {v.num_examples} samples {round(v.num_bytes/(1024.**3),2)} GB' for k,v in info.splits.items() ]}""")
 
-def load_cnn_dm_dataset(split=['train','validation','test'], streaming=False):
+def load_cnn_dm_dataset(split:any=['train','validation','test'], streaming:bool=False):
     """Loads and returns the CNN-DailyMail dataset
     
     Args:

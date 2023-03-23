@@ -5,4 +5,5 @@ torch==1.13.1 # Non-CUDA accelerated pytorch
 # --extra-index-url="https://download.pytorch.org/whl/cu117/" # For CUDA-accelerated torch
 transformers==4.27.2 # Huggingface transformers
 datasets==2.10.1 # Huggingface datasets
+protobuf<=3.20.1 # Newest versions of this breaks the PEGASUS model
 -e ./facebookresearch/access # ACCESS model for text simplification

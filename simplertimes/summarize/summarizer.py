@@ -5,7 +5,10 @@ from textwrap import dedent
 TORCH_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu",0)
 
 BART_MODEL_ID = 'facebook/bart-large-cnn'
+# Tokenizer config json: https://huggingface.co/facebook/bart-large-cnn/blob/main/tokenizer.json
+
 PEGASUS_MODEL_ID = 'google/pegasus-cnn_dailymail'
+# Tokenizer config json: https://huggingface.co/google/pegasus-cnn_dailymail/blob/main/tokenizer_config.json
 
 class Summarizer:
     """A summarizer object represents the summarization pipeline for a model."""
@@ -20,8 +23,11 @@ class Summarizer:
     def __str__(self) -> str:
         # Generate some sort of information dump here from __tokenizer and __model
         return dedent(f"""\
-            Something here    
-        """)
+            {self.__model}\
+            """)
+    
+    def print_details(self):
+        print(self)
 
     def generate_summary(self, ds, batch_size=1):
         """Generates summaries for the given dataset
@@ -44,4 +50,3 @@ def create_summarizer(model_id:str) -> Summarizer:
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
     return Summarizer(model_id, tokenizer, model)
-

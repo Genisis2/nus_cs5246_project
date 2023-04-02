@@ -9,7 +9,7 @@ Contains information on setting up and troubleshooting the development environme
   
 ## Python Package Requirements
 - Install python requirements with `pip install -r requirements.txt`
-    - Installs the non-CUDA `torch` by default. Requirements file can also install CUDA-accelerated `torch` if preferred.
+    - Installs the non-CUDA `torch` by default. `requirements-cuda.txt` file can also install CUDA-accelerated `torch` if preferred.
 - Potential issues
     - If having issues installing `git://github.com/feralvam/easse.git` from submodule, need to setup a redirect in git since the `git://` protocol is phased out in GitHub. Run `git config --global url.https://github.com/.insteadOf git://github.com/` to setup redirect.
     - If you encounter a Windows error, need to install Visual C++ 14.0 devkit on your system (ref: https://www.scivision.dev/python-windows-visual-c-14-required/)

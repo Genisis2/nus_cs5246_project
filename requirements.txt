@@ -1,2 +1,2 @@
 -r requirements-common.txt
-torch==1.13.1 # Non-CUDA accelerated pytorch
+torch==1.12.1 # Non-CUDA accelerated pytorch

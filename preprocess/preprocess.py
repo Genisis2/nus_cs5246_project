@@ -10,6 +10,10 @@ def movePeriod(document):
     new_doc = re.sub(' \!', '!', new_doc)
     return new_doc
 
+def moveApostrophe(document):
+    new_doc = re.sub(' \'', '\'', document)
+    return new_doc
+
 
 def pegasusToBart(document):
     return movePeriod(removePegasusNewLine(document=document))

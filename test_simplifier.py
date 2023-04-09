@@ -17,4 +17,21 @@ to_simplify = [
     "Mohammad Javad Zarif is the Iranian foreign minister. He has been John Kerry's opposite number in securing a breakthrough in nuclear discussions. He received a hero's welcome as he arrived in Iran on a sunny Friday morning. But there are some facts about Zarif that are less well-known."
 ]
 
-simplified, source = access_simplifier.simplify_document(to_simplify, True)
+simplified, comp_simp_pairs = access_simplifier.simplify_document(to_simplify)
+
+# Nicely formatted output
+for doc_idx in range(len(to_simplify)):
+    print(f"============================================================")
+    print()
+
+    doc_simp = simplified[doc_idx]
+    print(f"Summary:\n{doc_simp}\n")
+    
+    doc_sent_pairs = comp_simp_pairs[doc_idx]
+    print(f"Simplifications:")
+    for comp, simp in doc_sent_pairs:
+        print(f"{comp}")
+        print(f"--> {simp}")
+    print()
+    print(f"============================================================")
+

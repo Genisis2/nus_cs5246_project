@@ -1,21 +1,49 @@
 from textwrap import dedent
 from typing import List, Tuple, Union
-from nltk.tokenize import sent_tokenize
+from nltk.tokenize import sent_tokenize, word_tokenize
 from access.preprocessors import get_preprocessors
 from access.resources.prepare import prepare_models
 from access.simplifiers import get_fairseq_simplifier, get_preprocessed_simplifier
-from access.text import word_tokenize
 from access.utils.helpers import yield_lines, write_lines, get_temp_filepath, mute, delete_files
+from access.preprocess import normalize_quotes
+import re
 
-def _tokenize_document(document):
+def _word_tokenize(sentence:str) -> str:
+    """Replaces the word_tokenize used in `access.text`
+    
+    Original ACCESS word_tokenize uses NISTTokenizer, but this tokenizer misses splitting
+    contractions.
+
+    Args:
+        sentence : str
+            The sentence to tokenize
+    Returns:
+        The tokenized sentence where tokens are joined by whitespace
+    """
+    # Normalization
+    sentence = normalize_quotes(sentence)
+
+    # Change from ACCESS: Use NLTK's word_tokenize instead of NISTTokenizer
+    sentence = ' '.join(word_tokenize(sentence))
+    # Replace the starting double quotes `` with '' to match ACCESS training input
+    sentence = re.sub(r'``', r"''", sentence)
+
+    # Bottom procedure is copied directly from ACCESS
+    # Rejoin special tokens that where tokenized by error: e.g. "<PERSON_1>" -> "< PERSON _ 1 >"
+    for match in re.finditer(r'< (?:[A-Z]+ _ )+\d+ >', sentence):
+        sentence = sentence.replace(match.group(), ''.join(match.group().split()))
+        
+    return sentence
+
+def _tokenize_document(document:str) -> Tuple[str,List[str]]:
     """Passes the document sentence by sentence to ACCESS's `word_tokenize` preprocessing step
     
     Args:
         document : str
             A string representing a document to simplify
     Returns:
-        The tokenized document for ACCESS input at `out[0]`. The list of sentences of the document
-        in `out[1]`.
+        The tokenized document for ACCESS input at `out[0]`. 
+        The list of sentences of the document in `out[1]`.
     """
 
     # Split document into sentences using NLTK
@@ -25,7 +53,7 @@ def _tokenize_document(document):
     tokenized = []
     for sent in doc_sents:
         # Tokenize with the ACCESS provided tokenizer
-        tokenized.append(word_tokenize(sent))
+        tokenized.append(_word_tokenize(sent))
 
     return tokenized, doc_sents
 
@@ -33,10 +61,18 @@ def _get_simplification_params(level:int):
     """Get the simplification parameters of the model for the specified level"""
 
     # TODO: Do this properly. This is just a placeholder now.
+    # simplification_params = {
+    #     'LengthRatioPreprocessor': {'target_ratio': 0.95},
+    #     'LevenshteinPreprocessor': {'target_ratio': 0.75},
+    #     'WordRankRatioPreprocessor': {'target_ratio': 0.75},
+    #     'SentencePiecePreprocessor': {'vocab_size': 10000},
+    # }
     simplification_params = {
-        'LengthRatioPreprocessor': {'target_ratio': 0.95},
-        'LevenshteinPreprocessor': {'target_ratio': 0.75},
-        'WordRankRatioPreprocessor': {'target_ratio': 0.75},
+        'LengthRatioPreprocessor': {'target_ratio': 1},
+        'LevenshteinPreprocessor': {'target_ratio': 1},
+        'WordRankRatioPreprocessor': {'target_ratio': 1},
+        'DependencyTreeDepthRatioPreprocessor': {'target_ratio': 1},
+        # SentencePiecePreprocessor is an essential preprocessing step
         'SentencePiecePreprocessor': {'vocab_size': 10000},
     }
 
@@ -139,8 +175,8 @@ class AccessSimplifier:
                 doc_orig_sents = orig_sents[doc_idx]
                 doc_simp_sents = simp_sents[doc_idx]
                 # Store as pair
-                orig_simp_pairs.append([ (doc_orig_sents[sent_idx], doc_simp_sents[sent_idx]) 
-                                        for sent_idx in range(len(orig_sents)) ])
+                orig_simp_pairs.append([ (doc_orig_sents[sent_idx], doc_simp_sents[sent_idx] ) 
+                                        for sent_idx in range(len(doc_orig_sents)) ])
 
         # Always cleanup any files created
         finally:

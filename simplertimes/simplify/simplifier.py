@@ -6,6 +6,7 @@ from access.resources.prepare import prepare_models
 from access.simplifiers import get_fairseq_simplifier, get_preprocessed_simplifier
 from access.utils.helpers import yield_lines, write_lines, get_temp_filepath, mute, delete_files
 from access.preprocess import normalize_quotes
+from ..utils import detokenize_for_output
 import re
 
 def _word_tokenize(sentence:str) -> str:
@@ -162,6 +163,8 @@ class AccessSimplifier:
                 sentences = []
                 for sentence in yield_lines(pred):
                     sentences.append(sentence)
+                # Detokenize for properly formatted output
+                sentences = [detokenize_for_output(sent) for sent in sentences]
                 # Join the simplified sentences into a simplified document
                 simp_docs.append(' '.join(sentences))
                 # Keep track of simplified sentences

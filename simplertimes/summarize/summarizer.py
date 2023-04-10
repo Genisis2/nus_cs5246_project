@@ -1,6 +1,7 @@
 import torch
 from transformers import pipeline, AutoModelForSeq2SeqLM, AutoTokenizer
 from textwrap import dedent
+from ..utils import detokenize_for_output
 
 TORCH_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu",0)
 
@@ -43,7 +44,12 @@ class Summarizer:
         Returns:
             The generated summary/summaries for the given dataset
         """
-        return self.__summarizer(ds, batch_size=batch_size)
+        summaries = self.__summarizer(ds, batch_size=batch_size)
+        # Post process for proper output formatting
+        for doc_idx in range(len(summaries)):
+            summaries[doc_idx]['summary_text'] = \
+                detokenize_for_output(summaries[doc_idx]['summary_text'])
+        return summaries
     
 def create_summarizer(model_id:str) -> Summarizer:
     """Creates a summarizer object for the given model id"""

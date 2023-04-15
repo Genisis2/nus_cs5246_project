@@ -58,39 +58,19 @@ def _tokenize_document(document:str) -> Tuple[str,List[str]]:
 
     return tokenized, doc_sents
 
-def _get_simplification_params(level:int):
-    """Get the simplification parameters of the model for the specified level"""
-
-    # TODO: Do this properly. This is just a placeholder now.
-    # simplification_params = {
-    #     'LengthRatioPreprocessor': {'target_ratio': 0.95},
-    #     'LevenshteinPreprocessor': {'target_ratio': 0.75},
-    #     'WordRankRatioPreprocessor': {'target_ratio': 0.75},
-    #     'SentencePiecePreprocessor': {'vocab_size': 10000},
-    # }
-    simplification_params = {
-        'LengthRatioPreprocessor': {'target_ratio': 1},
-        'LevenshteinPreprocessor': {'target_ratio': 1},
-        'WordRankRatioPreprocessor': {'target_ratio': 1},
-        'DependencyTreeDepthRatioPreprocessor': {'target_ratio': 1},
-        # SentencePiecePreprocessor is an essential preprocessing step
-        'SentencePiecePreprocessor': {'vocab_size': 10000},
-    }
-
-    return simplification_params
+# The parameters used in the ACCESS paper to achieve their best results
+ACCESS_BEST_PARAMS = {
+    'LengthRatioPreprocessor': {'target_ratio': 0.95},
+    'LevenshteinPreprocessor': {'target_ratio': 0.75},
+    'WordRankRatioPreprocessor': {'target_ratio': 0.75},
+    'SentencePiecePreprocessor': {'vocab_size': 10000},
+}
 
 class AccessSimplifier:
     """Abstraction wrapper around the ACCESS simplifier model"""
     
     def __init__(self, level:int=5):
-        """Initializes the model to use
-        Args:
-            level : int
-                The level of simplification to be performed
-        """
-        # Set simplification arguments appropriate for the user's level
-        simp_params = _get_simplification_params(level)
-        preprocessors = get_preprocessors(simp_params)
+        preprocessors = get_preprocessors(ACCESS_BEST_PARAMS)
 
         # Download parameters for the best model from the authors
         best_model_dir = prepare_models()
@@ -102,9 +82,7 @@ class AccessSimplifier:
         self.simplifier = simplifier
 
     def __str__(self) -> str:
-        return dedent(f"""\
-            {self.simplifier}\
-            """)
+        return str(self.simplifier)
     
     def print_details(self):
         print(self)

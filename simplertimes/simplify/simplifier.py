@@ -1,7 +1,7 @@
 from typing import *
 
 class AbstractSimplifier:
-     def simplify_document(self, documents:Union[List[str], str]) -> Union[List[List[str]], List[List[Tuple[str,str]]]]:
+     def simplify_documents(self, documents:Union[List[str], str]) -> Union[List[List[str]], List[List[Tuple[str,str]]]]:
         """Simplifies the documents given. To be implemented by extending classes.
         
         Args:

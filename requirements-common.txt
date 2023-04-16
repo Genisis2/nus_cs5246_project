@@ -15,4 +15,4 @@ textstat==0.7.3 # For FKGL calculation. Also for DEPSYM.
 spacy-stanza==1.0.3 # For DEPSYM
 pattern==3.6.0 # For DEPSYM
 truecase==0.0.14 # For DEPSYM
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0-py3-none-any.whl # For installing the language model for DEPSYM
+https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.5.0/en_core_web_lg-3.5.0-py3-none-any.whl # For installing the language model for DEPSYM

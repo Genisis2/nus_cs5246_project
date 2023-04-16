@@ -89,7 +89,7 @@ class AccessSimplifier(AbstractSimplifier):
     def print_details(self):
         print(self)
 
-    def simplify_document(self, documents:Union[List[str], str]) -> Union[List[List[str]], List[List[Tuple[str,str]]]]:
+    def simplify_documents(self, documents:Union[List[str], str]) -> Union[List[List[str]], List[List[Tuple[str,str]]]]:
         """Simplifies the documents given
         
         Args:

@@ -3,6 +3,8 @@ This implementation of DEPSYM is copied directly from the code notebook in https
 
 Some code using StanzaLanguage have been modified as it is no longer supported in spacy-stanza v1.x.x.
 
+SpaCy model is changed to use en_core_web_lg instead of en_core_web_sm
+
 @inproceedings{depsym,
   author = {Chatterjee, Niladri and Agarwal, Raksha},
   title        = {DEPSYM: A Lightweight Syntactic Text Simplification Approach using Dependency Trees},
@@ -252,9 +254,12 @@ def remove_punct(s):
     s = truecase.get_true_case(s)
     return s
 
+# Share a global level nlp pipeline to avoid repeated instantiation
+spacy_nlp = spacy.load("en_core_web_lg")
+
 def appositive_simplification_2(comp_sent):
-  nlp = spacy.load("en_core_web_sm")
-  doc = nlp(comp_sent)
+  # nlp = spacy.load("en_core_web_sm")
+  doc = spacy_nlp(comp_sent)
 
   root = get_root(doc)
   subj = get_tag(root, "nsubj")
@@ -300,8 +305,8 @@ def rel_order(token):
     return False
 
 def relative_clause_simplify(cmp_snt):
-  nlp = spacy.load("en_core_web_sm") 
-  doc = nlp(cmp_snt)
+  # nlp = spacy.load("en_core_web_sm") 
+  doc = spacy_nlp(cmp_snt)
   root = get_root(doc)
   relcl = None
   relcl = find_in_subtree(root, "relcl")
@@ -324,7 +329,7 @@ def relative_clause_simplify(cmp_snt):
   sentence2 = ' '.join(sentence2.split()) 
   sentence2 = ' '.join(sentence2.split()) + "."
     
-  sent1_doc = nlp(sentence1)
+  sent1_doc = spacy_nlp(sentence1)
   sent1_root = get_root(sent1_doc)
   if(sent1_root.pos_ != "VERB" and sent1_root.pos_ != "AUX"):
     print("Relcl: No simplification")
@@ -612,8 +617,8 @@ def change_pronoun_subject(word):
   return " ".join(str(e) for e in word_list)
 
 def passive_simplify(cmp_snt):
-    nlp=spacy.load('en_core_web_sm')
-    doc = nlp(cmp_snt)
+    # nlp=spacy.load('en_core_web_sm')
+    doc = spacy_nlp(cmp_snt)
     simplify_flag = False
     root = get_root(doc)
     auxpass = find_in_children(root, "auxpass")
@@ -733,7 +738,7 @@ class DEPSYMSimplifier(AbstractSimplifier):
         # Reuse across simplifications because this is heavy to create
         self.Qnlp = None
 
-    def simplify_document(self, documents:Union[List[str], str]) -> Union[List[List[str]], List[List[Tuple[str,str]]]]:
+    def simplify_documents(self, documents:Union[List[str], str]) -> Union[List[List[str]], List[List[Tuple[str,str]]]]:
         """Simplifies the documents given
         
         Args:
@@ -764,22 +769,23 @@ class DEPSYMSimplifier(AbstractSimplifier):
         # Create simplified predictions
         simp_docs = []
         simp_sents = []
-        # Output silencing from https://stackoverflow.com/a/28321717
-        with open(os.devnull, 'w') as devnull:
-            with contextlib.redirect_stdout(devnull):
-              # For each document
-              for doc_sents in orig_sents:
-                  # For each document
-                  simp_doc_sents = []
-                  for comp_sent in doc_sents:
-                      # Simplify the sentences
-                      sentence = simplify(comp_sent, self.Qnlp)
-                      # Fix formatting
-                      sentence = detokenize_for_output(sentence)
-                      simp_doc_sents.append(sentence)
-                  # Collect the simplified sentences per doument
-                  simp_docs.append(' '.join(simp_doc_sents))
-                  simp_sents.append(simp_doc_sents)
+        # For each document
+        for doc_idx, doc_sents in enumerate(orig_sents):
+            print(f"Simplifying document {doc_idx+1}")
+            simp_doc_sents = []
+            # Output silencing from https://stackoverflow.com/a/28321717
+            with open(os.devnull, 'w') as devnull:
+                with contextlib.redirect_stdout(devnull):
+                    # For each sentence in the document
+                    for comp_sent in doc_sents:
+                        # Simplify the sentences
+                        sentence = simplify(comp_sent, self.Qnlp)
+                        # Fix formatting
+                        sentence = detokenize_for_output(sentence)
+                        simp_doc_sents.append(sentence)
+            # Collect the simplified sentences per doument
+            simp_docs.append(' '.join(simp_doc_sents))
+            simp_sents.append(simp_doc_sents)
             
         # Create complex-simple sentence pairs
         orig_simp_pairs = []

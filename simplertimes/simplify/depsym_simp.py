@@ -31,6 +31,8 @@ import os
 from pattern.helpers import decode_string
 from codecs import BOM_UTF8
 
+from simplertimes.simplify.simplifier import AbstractSimplifier
+
 BOM_UTF8 = BOM_UTF8.decode("utf-8")
 decode_utf8 = decode_string
 
@@ -687,11 +689,7 @@ def passive_simplify(cmp_snt):
     print(final_sent)
     return simplify_flag, final_sent
 
-Qnlp = None
-def simplify(snt):
-    global Qnlp # Share because instantiation is heavy
-    if Qnlp is None:
-        Qnlp = spacy_stanza.load_pipeline("en")
+def simplify(snt,Qnlp):
     doc=Qnlp(snt)
     flag = False
     final_snt = ""
@@ -699,24 +697,100 @@ def simplify(snt):
         flag, simp_snt = appositive_simplification_2(s.text)
         if(flag == True):
             print(simp_snt)
-            final_snt += (simplify(simp_snt) + " ")
+            final_snt += (simplify(simp_snt,Qnlp) + " ")
             continue
         else:
             flag, simp_snt = conjoint_clause_simplification(s.text,Qnlp)
             if(flag == True):
                 print(simp_snt)
-                final_snt += (simplify(simp_snt) + " ")
+                final_snt += (simplify(simp_snt,Qnlp) + " ")
                 continue
             else:
                 flag, simp_snt = relative_clause_simplify(s.text)
                 if(flag == True):
-                    final_snt += (simplify(simp_snt) + " ")
+                    final_snt += (simplify(simp_snt,Qnlp) + " ")
                     continue
                 else:
                     flag, simp_snt = passive_simplify(s.text)
                     if(flag == True):
-                        final_snt += (simplify(simp_snt) + " ")
+                        final_snt += (simplify(simp_snt,Qnlp) + " ")
                         continue
                     else:
                         final_snt += (simp_snt + " ")
     return final_snt
+
+
+# Custom simplifier wrapper around the DEPSYM code
+from nltk.tokenize import sent_tokenize
+from typing import *
+import os, contextlib # For silencing output. From https://stackoverflow.com/a/28321717
+from ..utils import detokenize_for_output
+
+class DEPSYMSimplifier(AbstractSimplifier):
+   
+    def __init__(self):
+        # Will hold onto the Stanza NLP object
+        # Reuse across simplifications because this is heavy to create
+        self.Qnlp = None
+
+    def simplify_document(self, documents:Union[List[str], str]) -> Union[List[List[str]], List[List[Tuple[str,str]]]]:
+        """Simplifies the documents given
+        
+        Args:
+            documents : str | [str]
+                The document(s) to simplify
+        
+        Returns:
+            A list containing the simplified documents. `out[0]` gives the simplified documents.
+            `out[1]` gives the complex-simple sentence pairs. Accessing complex-simple pairs will
+            follow the format: `pairs[doc_idx][pair_idx][orig=0|simp=1]`
+        """
+        
+        # Ensure list
+        if isinstance(documents, str):
+            documents = [documents]
+
+        # Split a document to its individual sentences
+        orig_sents = []
+        for document in documents:             
+            # Split document into sentences using NLTK
+            doc_sents = sent_tokenize(document, language='english')
+            orig_sents.append(doc_sents)
+
+        # Initialize stanza if not yet initialized
+        if self.Qnlp is None:
+            self.Qnlp = spacy_stanza.load_pipeline("en")
+
+        # Create simplified predictions
+        simp_docs = []
+        simp_sents = []
+        # Output silencing from https://stackoverflow.com/a/28321717
+        with open(os.devnull, 'w') as devnull:
+            with contextlib.redirect_stdout(devnull):
+              # For each document
+              for doc_sents in orig_sents:
+                  # For each document
+                  simp_doc_sents = []
+                  for comp_sent in doc_sents:
+                      # Simplify the sentences
+                      sentence = simplify(comp_sent, self.Qnlp)
+                      # Fix formatting
+                      sentence = detokenize_for_output(sentence)
+                      simp_doc_sents.append(sentence)
+                  # Collect the simplified sentences per doument
+                  simp_docs.append(' '.join(simp_doc_sents))
+                  simp_sents.append(simp_doc_sents)
+            
+        # Create complex-simple sentence pairs
+        orig_simp_pairs = []
+        # For each doc that was processed
+        for doc_idx in range(len(documents)):
+            # Get all the orig and simplified sentences
+            doc_orig_sents = orig_sents[doc_idx]
+            doc_simp_sents = simp_sents[doc_idx]
+            # Store as pair
+            orig_simp_pairs.append([ (doc_orig_sents[sent_idx], doc_simp_sents[sent_idx] ) 
+                                    for sent_idx in range(len(doc_orig_sents)) ])
+
+        return simp_docs, orig_simp_pairs
+

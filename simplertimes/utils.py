@@ -8,6 +8,19 @@ def remove_pegasus_new_line(document:str) -> str:
     new_doc = re.sub("<n>", " ", document)
     return new_doc
 
+def join_depsym_dash_delimited(text:str) -> str:
+    """Joins words that were separated by a dash
+
+    Args:
+        text : str
+            The source text
+    Returns:
+        The text with words like `black - and - white` joined to `black-and-white`
+    """
+    pattern = re.compile(r"\s+-\s+")
+    text = pattern.sub(r'-', text)
+    return text
+
 def replace_start_quote_for_tb(text:str) -> str:
     """Replaces the starting double quotes with treebank standard ``
     
@@ -35,10 +48,12 @@ def detokenize_for_output(text:str) -> str:
     """
     # Handling for PEGASUS output of newlines
     text = remove_pegasus_new_line(text)
-    # Handling of start quotes
+    # Handling for DEPSYM splitting words that are dash-delimited
+    text = join_depsym_dash_delimited(text)
+    # Handling of start quotes to align with treebank
     text = replace_start_quote_for_tb(text)
     # Split by space to retrieve token list
-    tokens = text.split(" ")
+    tokens = [ tok for tok in text.split(" ") if tok != "" ]
     # Detokenize
     text = TreebankWordDetokenizer().detokenize(tokens)
     # Detokenizer only handles periods at the end of the text.

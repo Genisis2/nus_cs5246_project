@@ -1,5 +1,1 @@
-
-
-def generate_vlist():
-    """Generates the vocab list"""
-    pass
+from .vocab_assistance import *
